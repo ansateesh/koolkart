@@ -56,7 +56,7 @@ router.get('/products', function (req, res) {
     // search catalog
     catalogService.getCatalog(searchRequest, function(error, results){
         if(error) {
-            console.log(err);
+            console.log(error);
             let resObj = {};
             let responseBody = [];
 
