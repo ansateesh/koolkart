@@ -46,6 +46,7 @@ app.use(expressValidator({
 
 // MySQL connections
 
+/*
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'localhost',
@@ -53,6 +54,7 @@ var pool  = mysql.createPool({
   password        : 'welcome',
   database        : 'sampledb'
 });
+*/
 
 /*
 var pool  = mysql.createPool({
@@ -63,6 +65,14 @@ var pool  = mysql.createPool({
   database        : 'sampledb'
 });
 */
+
+var pool  = mysql.createPool({
+  connectionLimit : 5,
+  host            : 'custom-mysql.gamification.svc.cluster.local',
+  user            : 'xxuser1',
+  password        : 'welcome1',
+  database        : 'sampledb'
+});
 
 global.connectionPool = pool;
 
