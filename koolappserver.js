@@ -56,20 +56,10 @@ var pool  = mysql.createPool({
 });
 */
 
-/*
-var pool  = mysql.createPool({
-  connectionLimit : 5,
-  host            : 'mysql.gamification.svc.cluster.local',
-  user            : 'xxuser',
-  password        : 'welcome1',
-  database        : 'sampledb'
-});
-*/
-
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'custom-mysql.gamification.svc.cluster.local',
-  user            : 'xxuser1',
+  user            : 'xxuser',
   password        : 'welcome1',
   database        : 'sampledb'
 });
