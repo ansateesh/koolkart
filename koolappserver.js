@@ -18,6 +18,10 @@ var mysql = require('mysql');
 var appContextPath = '/api/v1'
 var appPort = 8080
 
+let KEYWORDS = new Map();
+
+var catalogService = require(path.resolve(".") + '/src/services/catalogService.js');
+
 //Server Config
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb' }));
@@ -46,7 +50,6 @@ app.use(expressValidator({
 
 // MySQL connections
 
-/*
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'localhost',
@@ -54,8 +57,8 @@ var pool  = mysql.createPool({
   password        : 'welcome',
   database        : 'sampledb'
 });
-*/
 
+/*
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'custom-mysql.gamification.svc.cluster.local',
@@ -63,8 +66,10 @@ var pool  = mysql.createPool({
   password        : 'welcome1',
   database        : 'sampledb'
 });
+*/
 
 global.connectionPool = pool;
+global.DICTIONARY = KEYWORDS;
 
 // handle all errors
 app.use((err, req, res, next) => {
@@ -87,5 +92,7 @@ process.on("uncaughtException", function (err) {
     console.log(err.message)
     console.log(err.stack)
 });
+
+catalogService.buildDictionary();
 
 module.exports = app;

@@ -1,13 +1,30 @@
 
 const path = require('path');
 const catalogDAO = require('../dao/catalogDAO.js');
+const utils = require('../utils/utils.js');
 
-function getCatalog(request, callback) {
+async function getCatalog(request, callback) {
     var query = {};
     var response = {};
     
     if (request.keyword) {
         query.keyword = request.keyword;
+        
+        if (request.voiceSearch) {
+            // filter keyword search string against permissible dictionary words.            
+            query.voiceSearch = request.voiceSearch;
+            if (query.voiceSearch === "true"){
+                query.keyword = await utils.applyFilter(query.keyword);
+            }
+        } else {
+            query.keyword = await utils.applyFilter(query.keyword);
+        }
+        
+        if (!DICTIONARY || DICTIONARY.size < 1) {
+            // dictionary doesn't exist in cache. Build it.
+            console.log("Dictionary doesn't exist. Building it.")
+            await buildDictionary();
+        }
     }
     if (request.brands && request.brands.length > 0){
         query.brands = request.brands;
@@ -29,21 +46,22 @@ function getCatalog(request, callback) {
     console.log(query);
     
     // search catalog
-    catalogDAO.getCatalog(query, function(error, result) {
+    catalogDAO.getCatalog(query, async function(error, result) {
         if(error){
             return callback(error, null);
         }else{
-            catalogDAO.getFilters(query, function(error, filters) {
+            catalogDAO.getFilters(query, async function(error, filters) {
                 if(error){
-                    console.log("Error retrieving filters");
+                    console.log("Error retrieving filters " + DICTIONARY.size);
                     return callback(null, result);
                 }else{
                     result.brands = filters.brands;
                     result.colors = filters.colors;
                     result.sizes = filters.sizes;
                     
-                    console.log(filters);
-                    console.log(result);
+                    //console.log(filters);
+                    //console.log(result);
+                    
                     return callback(null, result);
                 }
             });            
@@ -51,4 +69,33 @@ function getCatalog(request, callback) {
     });
 }
 
-module.exports = { getCatalog };
+function getProductHierarchy() {
+    return new Promise(function(resolve, reject){
+        catalogDAO.getProductHierarchy(function() {
+            
+        });
+        
+    });
+}
+
+function buildDictionary() {
+    return new Promise(function (resolve, reject) {
+        catalogDAO.getSupportedKeywords(function(err, kwList){
+            if (err) {
+                console.log("Error building dictionary");
+                console.log(err);
+                reject(err);
+            }else {
+                if(kwList) {
+                    console.log("Total Words in Dictionary - " + kwList.size);
+                }
+                resolve(kwList);
+            }
+        });        
+        
+    });
+    console.log("Building Dictionary...");
+
+}
+
+module.exports = { getCatalog, buildDictionary };

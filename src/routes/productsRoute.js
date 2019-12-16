@@ -49,8 +49,11 @@ router.get('/products', function (req, res) {
             searchRequest.sortItem = req.query.sortItem;
         }        
     }
+    if (req.query.vs) {
+        searchRequest.voiceSearch=req.query.vs
+    }
     
-    console.log("Search Query...")
+    console.log("Search Request...")
     console.log(searchRequest);
     
     // search catalog
