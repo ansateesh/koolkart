@@ -5,7 +5,7 @@ const catalogService = require('../services/catalogService.js');
 
 router.get('/products', function (req, res) {
     
-    // validate input request : TODO
+    console.log("Route : get products");
     
     //form search request
     var searchRequest = {};
@@ -53,9 +53,6 @@ router.get('/products', function (req, res) {
         searchRequest.voiceSearch=req.query.vs
     }
     
-    console.log("Search Request...")
-    console.log(searchRequest);
-    
     // search catalog
     catalogService.getCatalog(searchRequest, function(error, results){
         if(error) {
@@ -72,6 +69,27 @@ router.get('/products', function (req, res) {
             res.send(results);            
         }
     });
+});
+
+router.get('/categories', function (req, res) {
+    
+    console.log("Route : get catalog hierarchy");
+    
+    catalogService.getCatalogHierarchy()
+        .then(data => {
+            res.send(data);
+        })
+        .catch(e => {
+            console.log(e);
+            let resObj = {};
+            let responseBody = [];
+
+            resObj.code = 100;
+            resObj.message = "Error while retrieving catalog hierarchy.";
+            responseBody.push(resObj);
+            res.status(500)
+            res.send(responseBody).end();            
+        });
 });
 
 module.exports = router;

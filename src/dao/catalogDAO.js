@@ -1,5 +1,6 @@
 const path = require('path');
 const utils = require('../utils/utils.js');
+const shape = require("shape-json");
 
 async function getCatalog(query, callback) {
     var formattedKeyword = "";
@@ -232,38 +233,67 @@ async function getSupportedKeywords(callback) {
     });
 }
 
-async function getProductHierarchy(callback) {
-    var response = {};
-    
-    var getAllSegmentsQuery = "select SEGMENT, SEGMENT_NAME from XXIBM_PRODUCT_CATALOGUE order by SEGMENT";
-    var getAllFamiliesQuery = "select FAMILY, FAMILY_NAME from XXIBM_PRODUCT_CATALOGUE where SEGMENT = (?) order by FAMILY";
-    var getAllClassesQuery = "select CLASS, CLASS_NAME from XXIBM_PRODUCT_CATALOGUE where FAMILY = (?) order by CLASS";
-    var getAllCommoditiesQuery = "select COMMODITY, COMMODITY_NAME from XXIBM_PRODUCT_CATALOGUE where CLASS = (?) order by COMMODITY";
-    /*
-    connectionPool.getConnection(function(err, connection) {
-        if(err){
-        } else {
-            connection.query(getAllSegmentQuery, function(e, segments, fields){
-                if(e) {
-                } else {
-                    if(segments && segments.length > 0) {
-                        Object.keys(segments).forEach(function(sid) {
-                            var row = segments[sid];
-                            var params = [];
-                            if (row) {
-                                params.push (sid)
-                                connection.query(getAllFamiliesQuery, params, function(e,  ){
-                                    
-                                });
-                            }
-                        }
+function getCatalogHierarchy() {
+    var results = [];
+    var query = "select SEGMENT, SEGMENT_NAME, FAMILY, FAMILY_NAME, CLASS, CLASS_NAME, COMMODITY, COMMODITY_NAME from XXIBM_PRODUCT_CATALOGUE";
+    var hierarchy = {};
+    var hierarchy_schema = {
+        "$group[segments](segment)": {
+            "id": "segment",
+            "name": "segment_name",
+            "$group[families](family)": {
+                "id": "family",
+                "name": "family_name",
+                "$group[classes](class)": {
+                    "id": "class",
+                    "name": "class_name",
+                    "$group[commodities](commodity)": {
+                        "id": "commodity",
+                        "name": "commodity_name"
                     }
                 }
-            });
+            }
         }
-        
+    };
+    
+    return new Promise (function(resolve, reject) {
+        connectionPool.getConnection(function(err, connection) {
+            if(err) {
+                console.log(err);
+                reject(err);
+            } else {
+                connection.query(query, async function(error, output, fields) {
+                    if(error) {
+                        console.log(error);
+                        reject(error);
+                    } else {
+                        if(output) {
+                            var resultKeys = Object.keys(output);
+                            await utils.asyncForEach(resultKeys, function (key){    
+                                var row = output[key];
+                                var record = {};
+                                if (row) {
+                                    record.segment = row.SEGMENT;
+                                    record.segment_name = row.SEGMENT_NAME;
+                                    record.family = row.FAMILY;
+                                    record.family_name = row.FAMILY_NAME;
+                                    record.class = row.CLASS;
+                                    record.class_name = row.CLASS_NAME;
+                                    record.commodity = row.COMMODITY;
+                                    record.commodity_name = row.COMMODITY_NAME;
+                                    results.push(record);
+                                }
+                            });
+                            hierarchy = shape.parse(results, hierarchy_schema); 
+                            resolve(hierarchy);
+                        } else {
+                            resolve(hierarchy);
+                        }
+                    }
+                });
+            }
+        });
     });
-    */
 }
 
-module.exports = { getCatalog, getFilters, getSupportedKeywords, getProductHierarchy };
+module.exports = { getCatalog, getFilters, getSupportedKeywords, getCatalogHierarchy };

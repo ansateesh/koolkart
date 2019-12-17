@@ -68,12 +68,11 @@ async function getCatalog(request, callback) {
     });
 }
 
-function getProductHierarchy() {
+function getCatalogHierarchy() {
     return new Promise(function(resolve, reject){
-        catalogDAO.getProductHierarchy(function() {
-            
-        });
-        
+        catalogDAO.getCatalogHierarchy()
+            .then(data => resolve(data))
+            .catch(e => {console.log(e);reject({})});
     });
 }
 
@@ -97,4 +96,4 @@ function buildDictionary() {
 
 }
 
-module.exports = { getCatalog, buildDictionary };
+module.exports = { getCatalog, buildDictionary, getCatalogHierarchy };
