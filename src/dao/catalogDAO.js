@@ -19,7 +19,7 @@ async function getCatalog(query, callback) {
     if(query.categoryId) {
         searchQuery = searchQuery.concat(" AND a.CATALOGUE_CATEGORY = ").concat(query.categoryId);
     }
-    if (query.brands) {DAO : Input
+    if (query.brands) {
         searchQuery = searchQuery.concat(" AND c.BRAND IN (").concat(utils.flatten(query.brands)).concat(")");
     }
     if (query.sizes) {
