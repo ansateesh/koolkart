@@ -1,7 +1,7 @@
 var WordPOS = require('wordpos'),
 wordpos = new WordPOS();
 var STOP_WORDS = ['in'];
-var NEW_WORDS = ['women\'s', 'men\'s', 'women', 'men']
+var NEW_WORDS = ['women\'s', 'men\'s', 'women', 'men', 'womens', 'mens']
     
 function flatten(input, delim){
     var result = "";
@@ -50,7 +50,7 @@ async function getFormattedKeyword(input, mandatoryKey) {
         // word while doing full text search.
         if(output){
             output = output.replace(/women/ig, "+women");
-            output = output.replace(/womens/ig, "+women");
+            //output = output.replace(/womens/ig, "+women");
             output = output.replace(/'/g, "\\'");
         }
         

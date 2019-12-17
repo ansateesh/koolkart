@@ -2,14 +2,16 @@ const path = require('path');
 const utils = require('../utils/utils.js');
 
 async function getCatalog(query, callback) {
+    var formattedKeyword = "";
     
-    console.log("DAO : Input - " + query);
+    console.log("DAO : Catalog Query");
+    console.log(query);
+    
     // form search query
     var baseQuery = 'select a.ITEM_NUMBER, a.DESCRIPTION, a.LONG_DESCRIPTION, a.CATALOGUE_CATEGORY, a.SKU_UNIT_OF_MEASURE, a.SKU_ATTRIBUTE1, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE2, a.SKU_ATTRIBUTE_VALUE2, a.SKU_ATTRIBUTE3, a.SKU_ATTRIBUTE_VALUE3, b.LIST_PRICE, b.DISCOUNT, b.IN_STOCK, c.BRAND AS BRAND from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_PRICING b, XXIBM_PRODUCT_STYLE c where a.ITEM_NUMBER=b.ITEM_NUMBER and c.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000';
     var searchQuery = baseQuery.concat("");
     
     if (query.keyword) {
-        var formattedKeyword = "";
         formattedKeyword = await utils.getFormattedKeyword(query.keyword, true);
         console.log("DAO : formatted keyword - " + formattedKeyword);
         searchQuery = searchQuery.concat(" AND match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) against('").concat(formattedKeyword).concat("' IN BOOLEAN MODE)");
@@ -17,7 +19,7 @@ async function getCatalog(query, callback) {
     if(query.categoryId) {
         searchQuery = searchQuery.concat(" AND a.CATALOGUE_CATEGORY = ").concat(query.categoryId);
     }
-    if (query.brands) {
+    if (query.brands) {DAO : Input
         searchQuery = searchQuery.concat(" AND c.BRAND IN (").concat(utils.flatten(query.brands)).concat(")");
     }
     if (query.sizes) {
@@ -37,14 +39,19 @@ async function getCatalog(query, callback) {
     }else {
         searchQuery = searchQuery.concat(" ORDER BY BRAND ASC, LIST_PRICE ASC");
     }        
-    
-    console.log(searchQuery);
-    
+
     connectionPool.getConnection(function(err, connection) {
         if(err) {
             // handle error
             return callback(err, null);
         }else {
+            console.log("DAO : Catalog Search Query final");
+            console.log(searchQuery);
+            
+            if(query.keyword) {
+                console.log("DAO : formatted keyword - " + formattedKeyword);                
+            }
+            
             var response = {
                 items : []
             }
@@ -79,9 +86,7 @@ async function getCatalog(query, callback) {
                         
                         // compute sell price
                         if (item.discount > 0) {
-                            item.discount = item.discount * 100;
-                            item.sell_price = (item.price - (item.price * item.discount)/100);
-                            item.sell_price = item.sell_price.toFixed(2);
+                            item.sell_price = (item.price - (item.price * item.discount));
                         }
                         
                         item = {};
