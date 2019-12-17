@@ -51,6 +51,7 @@
     "properties-reader": "0.0.15",
     "rewire": "^2.5.2",
     "rsvp": "^4.8.2",
+    "shape-json": "^1.2.4",
     "should": "^13.2.3",
     "sinon": "^7.3.0",
     "sonar-scanner": "^3.1.0",
