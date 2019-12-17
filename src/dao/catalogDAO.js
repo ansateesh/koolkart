@@ -87,7 +87,8 @@ async function getCatalog(query, callback) {
                             // compute sell price
                             item.discount = item.discount * 100;
                             item.sell_price = (item.price - (item.price * item.discount)/100);
-                            item.sell_price = item.sell_price.toFixed(2);
+                            //item.sell_price = item.sell_price.toFixed(2);
+                            item.sell_price = Math.round(item.sell_price);
                             //item.price = item.price.toFixed(2);
                         }    
                         
