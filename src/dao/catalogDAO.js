@@ -84,10 +84,17 @@ async function getCatalog(query, callback) {
                         item.category.id = row.CATALOGUE_CATEGORY;
                         response.items.push(item);
                         
+                        if (item.discount > 0) {
+                            item.discount = item.discount * 100;
+                        }
+                        
                         // compute sell price
                         if (item.discount > 0) {
-                            item.sell_price = (item.price - (item.price * item.discount));
+                            item.sell_price = (item.price - (item.price * item.discount)/100);
                         }
+                        
+                        item.sell_price = item.sell_price.toFixed(2);
+                        item.price = item.price.toFixed(2);
                         
                         item = {};
                     }
