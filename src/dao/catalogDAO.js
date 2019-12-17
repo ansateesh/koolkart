@@ -82,7 +82,6 @@ async function getCatalog(query, callback) {
                         item.color = row.SKU_ATTRIBUTE_VALUE2;
                         item.in_stock = row.IN_STOCK;
                         item.category.id = row.CATALOGUE_CATEGORY;
-                        response.items.push(item);
                         
                         if (item.discount > 0) {
                             item.discount = item.discount * 100;
@@ -94,7 +93,9 @@ async function getCatalog(query, callback) {
                         }
                         
                         item.sell_price = item.sell_price.toFixed(2);
-                        item.price = item.price.toFixed(2);
+                        //item.price = item.price.toFixed(2);
+                        
+                        response.items.push(item);
                         
                         item = {};
                     }
