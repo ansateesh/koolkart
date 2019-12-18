@@ -64,8 +64,10 @@ router.get('/products', function (req, res) {
             resObj.message = "Error while retrieving catalog";
             responseBody.push(resObj);
             res.status(500)
+            console.log("get catalog : Sending error response...")
             res.send(responseBody).end();            
         } else {
+            console.log("get catalog : Sending response...")
             res.send(results);            
         }
     });
@@ -77,6 +79,7 @@ router.get('/categories', function (req, res) {
     
     catalogService.getCatalogHierarchy()
         .then(data => {
+            console.log("get categoreis : Sending response...")
             res.send(data);
         })
         .catch(e => {
