@@ -193,6 +193,8 @@ async function getSupportedKeywords(callback) {
         }else {
             connection.query(query, async function (error, results, fields) {
                 if(error) {
+                    connection.release();
+                    return callback(error, null);
                 } else {
                     var item = {};
                     if (results && results.length > 0) {
@@ -226,6 +228,7 @@ async function getSupportedKeywords(callback) {
                             }
                         })
                     }
+                    connection.release();
                     return callback(null, DICTIONARY);
                 }
             });
@@ -273,8 +276,10 @@ function getCatalogHierarchy() {
                 connection.query(query, async function(error, output, fields) {
                     if(error) {
                         console.log(error);
+                        connection.release();
                         reject(error);
                     } else {
+                        connection.release();
                         console.log("DAO : after query execution...");
                         if(output) {
                             var resultKeys = Object.keys(output);
@@ -345,8 +350,10 @@ function getProducts(query) {
                 connection.query(getProductsQuery, queryParams, async function(error, output, fields) {
                     if(error) {
                         console.log(error);
+                        connection.release();
                         reject(error);
                     } else {
+                        connection.release();
                         if(output) {
                             var resultKeys = Object.keys(output);
                             await utils.asyncForEach(resultKeys, function (key){    
