@@ -44,28 +44,6 @@ async function getFormattedKeyword(input, mandatoryKey) {
     });
 }
 
-function buildDictionaryX(text){
-    return new Promise(async function (resolve, reject) {
-        var sanitizedInput = text.replace(/\s\s+/g, ' ');
-        var formattedInput = sanitizedInput.split(" ");
-        var allNouns = await getNouns(sanitizedInput);
-        formattedInput.forEach(function(e) {
-            ALLWORDS.set(e.toLowerCase(), e.toLowerCase());
-        });
-        if (allNouns && allNouns.length > 0){
-            await asyncForEach(allNouns, function(n){
-                DICTIONARY.set(n.toLowerCase(), n.toLowerCase());
-            });
-            NEW_WORDS.forEach(function(w) {
-                DICTIONARY.set(w.toLowerCase(), w.toLowerCase());
-            });
-            resolve(DICTIONARY);
-        } else {
-            resolve(DICTIONARY);            
-        }
-    });
-}
-
 function buildDictionary(text) {
     return new Promise(async function (resolve, reject) {
         var sanitizedInput = text.replace(/\s\s+/g, ' ');

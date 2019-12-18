@@ -70,9 +70,16 @@ async function getCatalog(request, callback) {
 }
 
 function getCatalogHierarchy() {
-    utils.printDictionary();
     return new Promise(function(resolve, reject){
         catalogDAO.getCatalogHierarchy()
+            .then(data => resolve(data))
+            .catch(e => {console.log(e);reject({})});
+    });
+}
+
+function getProducts(request) {
+    return new Promise(function(resolve, reject){
+        catalogDAO.getProducts(request)
             .then(data => resolve(data))
             .catch(e => {console.log(e);reject({})});
     });
@@ -98,4 +105,4 @@ function buildDictionary() {
 
 }
 
-module.exports = { getCatalog, buildDictionary, getCatalogHierarchy };
+module.exports = { getCatalog, buildDictionary, getCatalogHierarchy, getProducts };

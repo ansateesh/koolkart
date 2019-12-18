@@ -296,4 +296,83 @@ function getCatalogHierarchy() {
     });
 }
 
-module.exports = { getCatalog, getFilters, getSupportedKeywords, getCatalogHierarchy };
+function getProducts(query) {
+    var family = query.family;
+    var clazz = query.class;
+    var commodity = query.commodity;
+    
+    var getProductsQuery = "";
+    var queryParams = [];
+    
+    if (family) {
+        queryParams.push(family);
+        getProductsQuery = "select a.ITEM_NUMBER, a.DESCRIPTION, a.LONG_DESCRIPTION, a.CATALOGUE_CATEGORY, a.SKU_UNIT_OF_MEASURE, a.SKU_ATTRIBUTE1, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE2, a.SKU_ATTRIBUTE_VALUE2, a.SKU_ATTRIBUTE3, a.SKU_ATTRIBUTE_VALUE3, b.LIST_PRICE, b.DISCOUNT, b.IN_STOCK, c.BRAND AS BRAND from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_PRICING b, XXIBM_PRODUCT_STYLE c where a.ITEM_NUMBER=b.ITEM_NUMBER and c.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000 and a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE FAMILY=?) ORDER BY a.ITEM_NUMBER, c.BRAND;"
+    }
+    if (clazz) {
+        queryParams.push(clazz);
+        getProductsQuery = "select a.ITEM_NUMBER, a.DESCRIPTION, a.LONG_DESCRIPTION, a.CATALOGUE_CATEGORY, a.SKU_UNIT_OF_MEASURE, a.SKU_ATTRIBUTE1, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE2, a.SKU_ATTRIBUTE_VALUE2, a.SKU_ATTRIBUTE3, a.SKU_ATTRIBUTE_VALUE3, b.LIST_PRICE, b.DISCOUNT, b.IN_STOCK, c.BRAND AS BRAND from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_PRICING b, XXIBM_PRODUCT_STYLE c where a.ITEM_NUMBER=b.ITEM_NUMBER and c.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000 and a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE CLASS=?) ORDER BY a.ITEM_NUMBER, c.BRAND;"
+    } 
+    if (commodity) {
+        queryParams.push(commodity);
+        getProductsQuery = "select a.ITEM_NUMBER, a.DESCRIPTION, a.LONG_DESCRIPTION, a.CATALOGUE_CATEGORY, a.SKU_UNIT_OF_MEASURE, a.SKU_ATTRIBUTE1, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE2, a.SKU_ATTRIBUTE_VALUE2, a.SKU_ATTRIBUTE3, a.SKU_ATTRIBUTE_VALUE3, b.LIST_PRICE, b.DISCOUNT, b.IN_STOCK, c.BRAND AS BRAND from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_PRICING b, XXIBM_PRODUCT_STYLE c where a.ITEM_NUMBER=b.ITEM_NUMBER and c.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000 and a.CATALOGUE_CATEGORY=? ORDER BY a.ITEM_NUMBER, c.BRAND;"
+    } 
+    
+    return new Promise (function(resolve, reject) {
+        connectionPool.getConnection(function(err, connection) {
+            if(err) {
+                console.log(err);
+                reject(err);
+            } else {
+                var response = {
+                    items : []
+                }
+                connection.query(getProductsQuery, queryParams, async function(error, output, fields) {
+                    if(error) {
+                        console.log(error);
+                        reject(error);
+                    } else {
+                        if(output) {
+                            var resultKeys = Object.keys(output);
+                            await utils.asyncForEach(resultKeys, function (key){    
+                                var row = output[key];
+                                var record = {};
+                                var item = {};
+                                if (row) {
+                                    item.category = {};
+                                    item.sku = row.ITEM_NUMBER;
+                                    item.description = row.DESCRIPTION;
+                                    item.long_description = row.LONG_DESCRIPTION;
+                                    item.price = row.LIST_PRICE;
+                                    item.sell_price = item.price;
+                                    item.discount = row.DISCOUNT;
+                                    item.uom = row.SKU_UNIT_OF_MEASURE;
+                                    item.brand = row.BRAND;
+                                    item.size = row.SKU_ATTRIBUTE_VALUE1;
+                                    item.color = row.SKU_ATTRIBUTE_VALUE2;
+                                    item.in_stock = row.IN_STOCK;
+                                    item.category.id = row.CATALOGUE_CATEGORY;
+                                    
+                                    if (item.discount > 0) {
+                                        // compute sell price
+                                        item.discount = item.discount * 100;
+                                        item.sell_price = (item.price - (item.price * item.discount)/100);
+                                        //item.sell_price = item.sell_price.toFixed(2);
+                                        item.sell_price = Math.round(item.sell_price);
+                                        //item.price = item.price.toFixed(2);
+                                    }    
+                                    response.items.push(item);
+                                    item = {};
+                                }
+                            });
+                            resolve(response);
+                        } else {
+                            resolve(response);
+                        }
+                    }
+                });
+            }
+        });
+    });    
+}
+
+module.exports = { getCatalog, getFilters, getSupportedKeywords, getCatalogHierarchy, getProducts };

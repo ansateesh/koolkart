@@ -19,6 +19,7 @@ var appContextPath = '/api/v1'
 var appPort = 8080
 
 let KEYWORDS = new Map();
+let ALLWORDS = new Map();
 
 var catalogService = require(path.resolve(".") + '/src/services/catalogService.js');
 
@@ -67,8 +68,10 @@ var pool  = mysql.createPool({
   database        : 'sampledb'
 });
 
+
 global.connectionPool = pool;
 global.DICTIONARY = KEYWORDS;
+global.ALLWORDS = ALLWORDS;
 
 // handle all errors
 app.use((err, req, res, next) => {

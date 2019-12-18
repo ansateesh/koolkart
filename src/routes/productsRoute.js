@@ -92,4 +92,64 @@ router.get('/categories', function (req, res) {
         });
 });
 
+router.get('/catalog/family/:id', function (req, res) {
+    console.log("Route : get catalog for family " + req.params.id);
+    var request = {};
+    request.family = req.params.id;
+    
+    catalogService.getProducts(request)
+        .then(data => res.send(data))
+        .catch(e => {
+            console.log(e);
+            let resObj = {};
+            let responseBody = [];
+
+            resObj.code = 100;
+            resObj.message = "Error while retrieving products for family";
+            responseBody.push(resObj);
+            res.status(500)
+            res.send(responseBody).end();            
+        });
+});
+
+router.get('/catalog/class/:id', function (req, res) {
+    console.log("Route : get catalog for class " + req.params.id);
+    var request = {};
+    request.class = req.params.id; 
+    
+    catalogService.getProducts(request)
+        .then(data => res.send(data))
+        .catch(e => {
+            console.log(e);
+            let resObj = {};
+            let responseBody = [];
+
+            resObj.code = 100;
+            resObj.message = "Error while retrieving products for class";
+            responseBody.push(resObj);
+            res.status(500)
+            res.send(responseBody).end();            
+        });
+});
+
+router.get('/catalog/commodity/:id', function (req, res) {
+    console.log("Route : get catalog for commodity " + req.params.id);
+    var request = {};
+    request.commodity = req.params.id; 
+    
+    catalogService.getProducts(request)
+        .then(data => res.send(data))
+        .catch(e => {
+            console.log(e);
+            let resObj = {};
+            let responseBody = [];
+
+            resObj.code = 100;
+            resObj.message = "Error while retrieving products for commodity";
+            responseBody.push(resObj);
+            res.status(500)
+            res.send(responseBody).end();            
+        });
+});
+
 module.exports = router;
