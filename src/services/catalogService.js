@@ -72,7 +72,7 @@ async function getCatalog(request, callback) {
 function getCatalogHierarchy() {
     return new Promise(function(resolve, reject){
         catalogDAO.getCatalogHierarchy()
-            .then(data => resolve(data))
+            .then(data => {console.log("Service : got product hierarchy"); resolve(data)})
             .catch(e => {console.log(e);reject({})});
     });
 }

@@ -267,11 +267,13 @@ function getCatalogHierarchy() {
                 console.log(err);
                 reject(err);
             } else {
+                console.log("DAO : before query execution...");
                 connection.query(query, async function(error, output, fields) {
                     if(error) {
                         console.log(error);
                         reject(error);
                     } else {
+                        console.log("DAO : after query execution...");
                         if(output) {
                             var resultKeys = Object.keys(output);
                             await utils.asyncForEach(resultKeys, function (key){    
@@ -293,9 +295,12 @@ function getCatalogHierarchy() {
                                     results.push(record);
                                 }
                             });
+                            console.log("DAO : after getting data...");
                             hierarchy = shape.parse(results, hierarchy_schema); 
+                            console.log("DAO : after parsing...");
                             resolve(hierarchy);
                         } else {
+                            console.log("DAO : Resolving...");
                             resolve(hierarchy);
                         }
                     }
