@@ -1,6 +1,6 @@
 var WordPOS = require('wordpos'),
 wordpos = new WordPOS();
-var STOP_WORDS = ["in"];
+var STOP_WORDS = ["in", "and"];
 var NEW_WORDS = ["women's", "men's", "women", "men", "womens", "mens"]
     
 function flatten(input, delim){
