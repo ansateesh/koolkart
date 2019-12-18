@@ -234,6 +234,7 @@ async function getSupportedKeywords(callback) {
 }
 
 function getCatalogHierarchy() {
+    console.log("DAO : get product hierarchy...")
     var baseUrl = "/api/v1/catalog";
     var results = [];
     var query = "select SEGMENT, SEGMENT_NAME, FAMILY, FAMILY_NAME, CLASS, CLASS_NAME, COMMODITY, COMMODITY_NAME from XXIBM_PRODUCT_CATALOGUE";
@@ -262,6 +263,7 @@ function getCatalogHierarchy() {
     };
     
     return new Promise (function(resolve, reject) {
+        console.log("DAO : before getting connection...");
         connectionPool.getConnection(function(err, connection) {
             if(err) {
                 console.log(err);
