@@ -1,7 +1,7 @@
 var WordPOS = require('wordpos'),
 wordpos = new WordPOS();
-var STOP_WORDS = ['in'];
-var NEW_WORDS = ['women\'s', 'men\'s', 'women', 'men', 'womens', 'mens']
+var STOP_WORDS = ["in"];
+var NEW_WORDS = ["women's", "men's", "women", "men", "womens", "mens"]
     
 function flatten(input, delim){
     var result = "";
@@ -36,34 +36,22 @@ async function getFormattedKeyword(input, mandatoryKey) {
         var output="";
         var sanitizedInput = input.replace(/\s\s+/g, ' ');
         var formattedInput = sanitizedInput.split(" ");
-        await asyncForEach(formattedInput, async function(word){
-            await wordpos.isNoun(word, function (result){
-                if(result === true && STOP_WORDS.indexOf(word) < 0 ) {
-                    output = output.concat("+").concat(word).concat(" ");
-                }else{
-                    output = output.concat(word).concat(" ");
-                }
-            });
+        await asyncForEach(formattedInput, async function(word) {
+            output = output.concat("+").concat(word).concat(" ");
+            //output = output.replace(/'/g, "\\'");
         });
-        
-        // wordpos doesn't treat women as noun. Ensuring women is a mandatory
-        // word while doing full text search.
-        if(output){
-            output = output.replace(/women/ig, "+women");
-            //output = output.replace(/womens/ig, "+women");
-            output = output.replace(/'/g, "\\'");
-        }
-        
         resolve(output);
-        
     });
 }
 
-function buildDictionary(text){
+function buildDictionaryX(text){
     return new Promise(async function (resolve, reject) {
         var sanitizedInput = text.replace(/\s\s+/g, ' ');
         var formattedInput = sanitizedInput.split(" ");
         var allNouns = await getNouns(sanitizedInput);
+        formattedInput.forEach(function(e) {
+            ALLWORDS.set(e.toLowerCase(), e.toLowerCase());
+        });
         if (allNouns && allNouns.length > 0){
             await asyncForEach(allNouns, function(n){
                 DICTIONARY.set(n.toLowerCase(), n.toLowerCase());
@@ -75,6 +63,27 @@ function buildDictionary(text){
         } else {
             resolve(DICTIONARY);            
         }
+    });
+}
+
+function buildDictionary(text) {
+    return new Promise(async function (resolve, reject) {
+        var sanitizedInput = text.replace(/\s\s+/g, ' ');
+        var formattedInput = sanitizedInput.split(" ");
+        
+        await asyncForEach(formattedInput, function(n){
+            if(STOP_WORDS.includes(n) === false) {
+                DICTIONARY.set(n.toLowerCase(), n.toLowerCase());
+            }
+        });
+
+        await asyncForEach(NEW_WORDS, function(e){
+            if(STOP_WORDS.includes(e) === false) {
+                DICTIONARY.set(e.toLowerCase(), e.toLowerCase());
+            }
+        });         
+        
+        resolve(DICTIONARY);
     });
 }
 
@@ -98,8 +107,6 @@ async function applyFilter(input) {
         
         resolve(filteredInput);
     });
-    
-
 }
 
 function printDictionary() {

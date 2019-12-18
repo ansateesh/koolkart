@@ -15,7 +15,7 @@ async function getCatalog(query, callback) {
     if (query.keyword) {
         formattedKeyword = await utils.getFormattedKeyword(query.keyword, true);
         console.log("DAO : formatted keyword - " + formattedKeyword);
-        searchQuery = searchQuery.concat(" AND match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) against('").concat(formattedKeyword).concat("' IN BOOLEAN MODE)");
+        searchQuery = searchQuery.concat(" AND match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) against(\"").concat(formattedKeyword).concat("\" IN BOOLEAN MODE)");
     }
     if(query.categoryId) {
         searchQuery = searchQuery.concat(" AND a.CATALOGUE_CATEGORY = ").concat(query.categoryId);

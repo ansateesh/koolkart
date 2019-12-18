@@ -10,6 +10,12 @@ async function getCatalog(request, callback) {
     if (request.keyword) {
         query.keyword = request.keyword;
         
+        if (!DICTIONARY || DICTIONARY.size < 1) {
+            // dictionary doesn't exist in cache. Build it.
+            console.log("Dictionary doesn't exist. Building it.")
+            await buildDictionary();
+        }
+        
         if (request.voiceSearch) {
             console.log("Voice Search Input - " + request.keyword);
             // filter keyword search string against permissible dictionary words.            
@@ -22,11 +28,6 @@ async function getCatalog(request, callback) {
             query.keyword = await utils.applyFilter(query.keyword);
         }
         
-        if (!DICTIONARY || DICTIONARY.size < 1) {
-            // dictionary doesn't exist in cache. Build it.
-            console.log("Dictionary doesn't exist. Building it.")
-            await buildDictionary();
-        }
     }
     if (request.brands && request.brands.length > 0){
         query.brands = request.brands;
@@ -69,6 +70,7 @@ async function getCatalog(request, callback) {
 }
 
 function getCatalogHierarchy() {
+    utils.printDictionary();
     return new Promise(function(resolve, reject){
         catalogDAO.getCatalogHierarchy()
             .then(data => resolve(data))
