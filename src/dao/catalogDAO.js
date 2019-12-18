@@ -234,6 +234,7 @@ async function getSupportedKeywords(callback) {
 }
 
 function getCatalogHierarchy() {
+    var baseUrl = "/api/v1/catalog";
     var results = [];
     var query = "select SEGMENT, SEGMENT_NAME, FAMILY, FAMILY_NAME, CLASS, CLASS_NAME, COMMODITY, COMMODITY_NAME from XXIBM_PRODUCT_CATALOGUE";
     var hierarchy = {};
@@ -241,15 +242,19 @@ function getCatalogHierarchy() {
         "$group[segments](segment)": {
             "id": "segment",
             "name": "segment_name",
+            "url": "segment_url",
             "$group[families](family)": {
                 "id": "family",
                 "name": "family_name",
+                "url": "family_url",
                 "$group[classes](class)": {
                     "id": "class",
                     "name": "class_name",
+                    "url": "class_url",
                     "$group[commodities](commodity)": {
                         "id": "commodity",
-                        "name": "commodity_name"
+                        "name": "commodity_name",
+                        "url": "commodity_url"
                     }
                 }
             }
@@ -281,6 +286,10 @@ function getCatalogHierarchy() {
                                     record.class_name = row.CLASS_NAME;
                                     record.commodity = row.COMMODITY;
                                     record.commodity_name = row.COMMODITY_NAME;
+                                    record.segment_url = baseUrl.concat("/segment/").concat(row.SEGMENT);
+                                    record.family_url = baseUrl.concat("/family/").concat(row.FAMILY);
+                                    record.class_url = baseUrl.concat("/class/").concat(row.CLASS);
+                                    record.commodity_url = baseUrl.concat("/commodity/").concat(row.COMMODITY);
                                     results.push(record);
                                 }
                             });
