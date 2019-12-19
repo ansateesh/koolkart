@@ -12,3 +12,5 @@ function cache_get(key, callback) {
         return callback(err, result);
     });
 }
+
+module.exports = {cache_get, cache_set};
