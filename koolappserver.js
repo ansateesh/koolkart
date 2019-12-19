@@ -13,6 +13,7 @@ var app = express();
 var uuid = require('uuid-random');
 var httpContext = require('express-http-context');
 var mysql = require('mysql');
+var redis = require('redis');
 
 //App Attributes Env Values
 var appContextPath = '/api/v1'
@@ -68,6 +69,21 @@ var pool  = mysql.createPool({
   database        : 'sampledb'
 });
 
+//Redis connectionLimit
+var redisConnectionConfig = {
+    port : 6379,
+    host : "172.30.144.120",
+    password : "mjUCewcQyDc8LDcX"
+}
+var redisClient = redis.createClient(redisConnectionConfig);
+
+redisClient.on('connect', function() {
+    console.log('Redis client connected');
+});
+
+redisClient.on('error', function (err) {
+    console.log('Something went wrong ' + err);
+});
 
 global.connectionPool = pool;
 global.DICTIONARY = KEYWORDS;
