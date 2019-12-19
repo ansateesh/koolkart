@@ -1,6 +1,6 @@
 const CACHE = {
     KEYS : {
-        PRODUCT_HIERARCHY : {key : "product_hierarchy"} 
+        PRODUCT_HIERARCHY : {key : "catalog_hierarchy"} 
     }
 }
 
