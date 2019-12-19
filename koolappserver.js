@@ -14,6 +14,8 @@ var uuid = require('uuid-random');
 var httpContext = require('express-http-context');
 var mysql = require('mysql');
 var redis = require('redis');
+var constants = require(path.resolve(".") + '/src/constants/constants.js');
+var cache = require(path.resolve(".") + '/src/utils/cache.js');
 
 //App Attributes Env Values
 var appContextPath = '/api/v1'
@@ -80,6 +82,15 @@ var client = redis.createClient(redisConnectionConfig);
 
 client.on('connect', function() {
     console.log('Redis client connected');
+    // clear older keys
+    cache.set(constants.CACHE.KEYS.PRODUCT_HIERARCHY, null, function (err, result){
+        if(err) {
+            console.log("Error clearing product hierarchy from cache");
+        } else {
+            console.log("Cleared product hierarchy from cache.");
+        }
+    })
+    
 });
 
 client.on('error', function (err) {
