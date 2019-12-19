@@ -83,14 +83,14 @@ var client = redis.createClient(redisConnectionConfig);
 client.on('connect', function() {
     console.log('Redis client connected');
     // clear older keys
-    cache.set(constants.CACHE.KEYS.PRODUCT_HIERARCHY, null, function (err, result){
+    client.del(constants.CACHE.KEYS.PRODUCT_HIERARCHY, function (err, result){
         if(err) {
             console.log("Error clearing product hierarchy from cache");
         } else {
             console.log("Cleared product hierarchy from cache.");
+            console.log("Redis Del", result);
         }
     })
-    
 });
 
 client.on('error', function (err) {
