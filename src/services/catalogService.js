@@ -79,7 +79,7 @@ function getCatalogHierarchy() {
                     .then(data => {
                             console.log("Service : got product hierarchy");
                             // cache it!
-                            cache.store(constants.CACHE.KEYS.PRODUCT_HIERARCHY, function(err, res){
+                            cache.set(constants.CACHE.KEYS.PRODUCT_HIERARCHY, function(err, res){
                                 if(err) {
                                     console.log("Failed to cache catalog hierarchy");
                                     console.lor(err);
