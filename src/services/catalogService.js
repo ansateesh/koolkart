@@ -1,7 +1,8 @@
-
 const path = require('path');
 const catalogDAO = require('../dao/catalogDAO.js');
 const utils = require('../utils/utils.js');
+const cache = require('../utils/cache.js');
+const constants = require('../constants/constants.js');
 
 async function getCatalog(request, callback) {
     var query = {};
@@ -45,7 +46,6 @@ async function getCatalog(request, callback) {
         query.sortItem = request.sortItem;
     }
     
-    // search catalog
     catalogDAO.getCatalog(query, async function(error, result) {
         if(error){
             return callback(error, null);
@@ -72,9 +72,29 @@ async function getCatalog(request, callback) {
 function getCatalogHierarchy() {
     console.log("Service : get product hierarchy");
     return new Promise(function(resolve, reject){
-        catalogDAO.getCatalogHierarchy()
-            .then(data => {console.log("Service : got product hierarchy"); resolve(data)})
-            .catch(e => {console.log(e);reject({})});
+        cache.get(constants.CACHE.KEYS.PRODUCT_HIERARCHY, function(error, result){
+            if(error || result === null) {
+                console.log("Cache Miss : Catalog hierarchy");
+                catalogDAO.getCatalogHierarchy()
+                    .then(data => {
+                            console.log("Service : got product hierarchy");
+                            // cache it!
+                            cache.store(constants.CACHE.KEYS.PRODUCT_HIERARCHY, function(err, res){
+                                if(err) {
+                                    console.log("Failed to cache catalog hierarchy");
+                                    console.lor(err);
+                                } else {
+                                    console.log("Cached catalog hierarchy!")
+                                }
+                            })
+                            resolve(data);
+                    })
+                    .catch(e => {console.log(e);reject({})});
+            } else {
+                console.log("Cache Hit : Catalog hierarchy");
+                resolve(result);
+            }
+        })
     });
 }
 

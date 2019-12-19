@@ -69,23 +69,25 @@ var pool  = mysql.createPool({
   database        : 'sampledb'
 });
 
-//Redis connectionLimit
+//Redis
 var redisConnectionConfig = {
     port : 6379,
     host : "172.30.144.120",
     password : "mjUCewcQyDc8LDcX"
 }
-var redisClient = redis.createClient(redisConnectionConfig);
 
-redisClient.on('connect', function() {
+var client = redis.createClient(redisConnectionConfig);
+
+client.on('connect', function() {
     console.log('Redis client connected');
 });
 
-redisClient.on('error', function (err) {
-    console.log('Something went wrong ' + err);
+client.on('error', function (err) {
+    console.log('Redis client connection went wrong ' + err);
 });
 
 global.connectionPool = pool;
+global.redisClient = client;
 global.DICTIONARY = KEYWORDS;
 global.ALLWORDS = ALLWORDS;
 
@@ -109,6 +111,13 @@ var server = app.listen(appPort, function () {
 process.on("uncaughtException", function (err) {
     console.log(err.message)
     console.log(err.stack)
+});
+
+process.on("exit", function (code) {
+    console.log("Node Process exiting with code..." + code);
+    if (client) {
+        client.end(true);
+    }
 });
 
 catalogService.buildDictionary();
