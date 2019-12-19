@@ -49,6 +49,7 @@
     "nyc": "^14.0.0",
     "path": "^0.12.7",
     "properties-reader": "0.0.15",
+    "redis": "^2.8.0",
     "rewire": "^2.5.2",
     "rsvp": "^4.8.2",
     "shape-json": "^1.2.4",
