@@ -1,4 +1,5 @@
 const path = require('path');
+const UTIL = require('util');
 const catalogDAO = require('../dao/catalogDAO.js');
 const utils = require('../utils/utils.js');
 const cache = require('../utils/cache.js');
@@ -59,9 +60,6 @@ async function getCatalog(request, callback) {
                     result.colors = filters.colors;
                     result.sizes = filters.sizes;
                     
-                    //console.log(filters);
-                    //console.log(result);
-                    
                     return callback(null, result);
                 }
             });            
@@ -70,39 +68,38 @@ async function getCatalog(request, callback) {
 }
 
 function getCatalogHierarchy() {
-    console.log("Service : get product hierarchy");
-    return new Promise(function(resolve, reject){
-        cache.get(constants.CACHE.KEYS.PRODUCT_HIERARCHY, function(error, result){
-            if(error || result === null) {
-                console.log("Cache Miss : Catalog hierarchy");
-                catalogDAO.getCatalogHierarchy()
-                    .then(data => {
-                            console.log("Service : got product hierarchy");
-                            // cache it!
-                            cache.set(constants.CACHE.KEYS.PRODUCT_HIERARCHY, data, function(err, res){
-                                if(err) {
-                                    console.log("Failed to cache catalog hierarchy");
-                                    console.lor(err);
-                                } else {
-                                    console.log("Cached catalog hierarchy!")
-                                }
-                            })
-                            resolve(data);
-                    })
-                    .catch(e => {console.log(e);reject({})});
-            } else {
-                console.log("Cache Hit : Catalog hierarchy");
-                resolve(result);
-            }
-        })
-    });
+    return getResults(constants.CACHE.KEYS.PRODUCT_HIERARCHY, catalogDAO.getCatalogHierarchy);
 }
 
 function getProducts(request) {
+    return getResults(request, catalogDAO.getProducts, request);
+}
+
+function getResults(key, command, ...command_args) {
+    var cache_key = (key instanceof String) ? key : JSON.stringify(key);
     return new Promise(function(resolve, reject){
-        catalogDAO.getProducts(request)
-            .then(data => resolve(data))
-            .catch(e => {console.log(e);reject({})});
+        cache.get(cache_key, function(error, result){
+            if(error || result === null) {
+                console.log("Cache Miss : " + cache_key);
+                command(...command_args)
+                    .then(data => {
+                        console.log(JSON.stringify(data));
+                        cache.set(cache_key, JSON.stringify(data), function(err, res){
+                            if(err) {
+                                console.log("Failed to cache products data");
+                                console.log(err);
+                            } else {
+                                console.log("cached products data");
+                            }
+                        })
+                        resolve(data);
+                    })
+                    .catch(e => {console.log(e);reject({})});                
+            } else {
+                console.log("Cache Hit : " + cache_key);
+                resolve(JSON.parse(result));
+            }                
+        });
     });
 }
 
@@ -120,10 +117,8 @@ function buildDictionary() {
                 resolve(kwList);
             }
         });        
-        
     });
     console.log("Building Dictionary...");
-
 }
 
 module.exports = { getCatalog, buildDictionary, getCatalogHierarchy, getProducts };

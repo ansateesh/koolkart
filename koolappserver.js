@@ -52,8 +52,8 @@ app.use(expressValidator({
     }
 }));
 
-// MySQL connections
 /*
+// MySQL connections
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'localhost',
@@ -61,7 +61,18 @@ var pool  = mysql.createPool({
   password        : 'welcome',
   database        : 'sampledb'
 });
+var redisConnectionConfig = {
+    port : 6379,
+    host : "192.168.134.132"
+}
 */
+
+//Redis config
+var redisConnectionConfig = {
+    port : 6379,
+    host : "172.30.144.120",
+    password : "mjUCewcQyDc8LDcX"
+}
 
 var pool  = mysql.createPool({
   connectionLimit : 5,
@@ -71,24 +82,18 @@ var pool  = mysql.createPool({
   database        : 'sampledb'
 });
 
-//Redis
-var redisConnectionConfig = {
-    port : 6379,
-    host : "172.30.144.120",
-    password : "mjUCewcQyDc8LDcX"
-}
-
 var client = redis.createClient(redisConnectionConfig);
 
 client.on('connect', function() {
     console.log('Redis client connected');
     // clear older keys
-    client.del(JSON.stringify(constants.CACHE.KEYS.PRODUCT_HIERARCHY), function (err, result){
+    var catalog_hierarchy_key = JSON.stringify(constants.CACHE.KEYS.PRODUCT_HIERARCHY);
+    client.del(catalog_hierarchy_key, function (err, result){
         if(err) {
             console.log("Error clearing product hierarchy from cache");
         } else {
             console.log("Cleared product hierarchy from cache.");
-            console.log("Redis Del", result);
+            console.log("Redis Del for " + catalog_hierarchy_key + " : ", result);
         }
     })
 });

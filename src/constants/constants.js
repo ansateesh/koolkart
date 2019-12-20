@@ -4,4 +4,6 @@ const CACHE = {
     }
 }
 
-module.exports = Object.freeze({CACHE});
+const CACHE_EXPIRY_IN_SEC = 86400; // 24 hours
+
+module.exports = {CACHE, CACHE_EXPIRY_IN_SEC};
