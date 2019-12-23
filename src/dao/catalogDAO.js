@@ -117,24 +117,46 @@ async function getFilters(query, callback) {
     var queryValues = [];
     
     if (query.keyword) {
+        console.log("Filter Keyword : " + query.keyword);
         var formattedKeyword = await utils.getFormattedKeyword(query.keyword);
         formattedKeyword = "'".concat(formattedKeyword).concat("'");
-        console.log(formattedKeyword);
+        formattedKeyword = formattedKeyword.concat(" in boolean mode");
+        console.log("Filter = " + formattedKeyword);
         filterQuery = 'select ' + 
-                        '(select group_concat(distinct SKU_ATTRIBUTE_VALUE1) as sizes from XXIBM_PRODUCT_SKU where match(DESCRIPTION, LONG_DESCRIPTION, SKU_ATTRIBUTE_VALUE1, SKU_ATTRIBUTE_VALUE2) against (?)) as sizes,' +
-                        '(select group_concat(distinct SKU_ATTRIBUTE_VALUE2) as colors from XXIBM_PRODUCT_SKU where match(DESCRIPTION, LONG_DESCRIPTION, SKU_ATTRIBUTE_VALUE1, SKU_ATTRIBUTE_VALUE2) against (?)) as colors,' +
-                        '(select group_concat(distinct b.BRAND) as brands from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_STYLE b where b.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000 and match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) against (?)) as brands';
+                        '(select group_concat(distinct SKU_ATTRIBUTE_VALUE1) as sizes from XXIBM_PRODUCT_SKU where match(DESCRIPTION, LONG_DESCRIPTION, SKU_ATTRIBUTE_VALUE1, SKU_ATTRIBUTE_VALUE2) '.concat('against(').concat(formattedKeyword).concat(')) as sizes,') + 
+                        '(select group_concat(distinct SKU_ATTRIBUTE_VALUE2) as colors from XXIBM_PRODUCT_SKU where match(DESCRIPTION, LONG_DESCRIPTION, SKU_ATTRIBUTE_VALUE1, SKU_ATTRIBUTE_VALUE2) '.concat('against(').concat(formattedKeyword).concat(')) as colors,') + 
+                        '(select group_concat(distinct b.BRAND) as brands from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_STYLE b where b.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000 and match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) '.concat('against(').concat(formattedKeyword).concat(')) as brands');
+                        /*
         queryValues.push(formattedKeyword);
         queryValues.push(formattedKeyword);
         queryValues.push(formattedKeyword);
-    } else if(query.categoryId) {
-        filterQuery = 'select ' + '(select group_concat(distinct SKU_ATTRIBUTE_VALUE1) from XXIBM_PRODUCT_SKU where CATALOGUE_CATEGORY in (?) and SKU_ATTRIBUTE_VALUE1 IS NOT NULL ) as sizes,' +
-                                  '(select group_concat(distinct SKU_ATTRIBUTE_VALUE2) from XXIBM_PRODUCT_SKU where CATALOGUE_CATEGORY in (?) and SKU_ATTRIBUTE_VALUE2 IS NOT NULL) as colors,' +
-                                  '(select group_concat(distinct BRAND) from XXIBM_PRODUCT_STYLE where CATALOGUE_CATEGORY in (?) and BRAND IS NOT NULL) as brands';
-        queryValues.push(query.categoryId);
-        queryValues.push(query.categoryId);
-        queryValues.push(query.categoryId);
+        */
+    } else if (query.family) {
+        filterQuery = 'select ' + 
+                            '(select group_concat(distinct a.SKU_ATTRIBUTE_VALUE1) from XXIBM_PRODUCT_SKU a where a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE FAMILY=?) and a.SKU_ATTRIBUTE1 IS NOT NULL ) as sizes,' +
+                            '(select group_concat(distinct a.SKU_ATTRIBUTE_VALUE2) from XXIBM_PRODUCT_SKU a where a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE FAMILY=?) AND a.SKU_ATTRIBUTE2 IS NOT NULL ) as colors,' +
+                            '(select group_concat(distinct BRAND) from XXIBM_PRODUCT_STYLE a where a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE FAMILY=?) AND BRAND IS NOT NULL ) as brands';
+        queryValues.push(query.family);
+        queryValues.push(query.family);
+        queryValues.push(query.family);                            
+    } else if (query.class) {
+        filterQuery = 'select ' + 
+                            '(select group_concat(distinct a.SKU_ATTRIBUTE_VALUE1) from XXIBM_PRODUCT_SKU a where a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE CLASS=?) and a.SKU_ATTRIBUTE1 IS NOT NULL ) as sizes,' +
+                            '(select group_concat(distinct a.SKU_ATTRIBUTE_VALUE2) from XXIBM_PRODUCT_SKU a where a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE CLASS=?) AND a.SKU_ATTRIBUTE2 IS NOT NULL ) as colors,' +
+                            '(select group_concat(distinct BRAND) from XXIBM_PRODUCT_STYLE a where a.CATALOGUE_CATEGORY IN (select COMMODITY FROM XXIBM_PRODUCT_CATALOGUE WHERE CLASS=?) AND BRAND IS NOT NULL ) as brands';
+        queryValues.push(query.class);
+        queryValues.push(query.class);
+        queryValues.push(query.class);                            
+    } else if (query.commodity) {
+        filterQuery = 'select ' + 
+                            '(select group_concat(distinct a.SKU_ATTRIBUTE_VALUE1) from XXIBM_PRODUCT_SKU a where a.CATALOGUE_CATEGORY in (?) and a.SKU_ATTRIBUTE1 IS NOT NULL ) as sizes,' +
+                            '(select group_concat(distinct a.SKU_ATTRIBUTE_VALUE2) from XXIBM_PRODUCT_SKU a where a.CATALOGUE_CATEGORY in (?) AND a.SKU_ATTRIBUTE2 IS NOT NULL ) as colors,' +
+                            '(select group_concat(distinct BRAND) from XXIBM_PRODUCT_STYLE a where a.CATALOGUE_CATEGORY in (?) AND BRAND IS NOT NULL ) as brands';
+        queryValues.push(query.commodity);
+        queryValues.push(query.commodity);
+        queryValues.push(query.commodity);                            
     } else {
+        console.log("SHOULD NOT HAVE ENTERED HERE....")
         filterQuery = 'select ' + '(select group_concat(distinct SKU_ATTRIBUTE_VALUE1) from XXIBM_PRODUCT_SKU where SKU_ATTRIBUTE_VALUE1 IS NOT NULL ) as sizes,' +
                                   '(select group_concat(distinct SKU_ATTRIBUTE_VALUE2) from XXIBM_PRODUCT_SKU where SKU_ATTRIBUTE_VALUE2 IS NOT NULL) as colors,' +
                                   '(select group_concat(distinct BRAND) from XXIBM_PRODUCT_STYLE where BRAND IS NOT NULL ) as brands';
@@ -167,6 +189,7 @@ async function getFilters(query, callback) {
                 }
                 
                 if (results[0].colors) {
+                    console.log("Filters : colors : " + results[0].colors);
                     response.colors = results[0].colors.split(",");
                 }
                 if (results[0].brands) {
@@ -373,15 +396,23 @@ function getProducts(query) {
                                         // compute sell price
                                         item.discount = item.discount * 100;
                                         item.sell_price = (item.price - (item.price * item.discount)/100);
-                                        //item.sell_price = item.sell_price.toFixed(2);
                                         item.sell_price = Math.round(item.sell_price);
-                                        //item.price = item.price.toFixed(2);
                                     }    
                                     response.items.push(item);
                                     item = {};
                                 }
                             });
-                            resolve(response);
+                            // retrieve applicable filters
+                            getFilters(query, function(err, filters){
+                                if(err) {
+                                    console.log("Error retrieving filters.")
+                                } else {
+                                    response.brands = filters.brands;
+                                    response.colors = filters.colors;
+                                    response.sizes = filters.sizes;
+                                }
+                                resolve(response);
+                            });
                         } else {
                             resolve(response);
                         }

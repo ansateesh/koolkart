@@ -18,18 +18,21 @@ async function getCatalog(request, callback) {
             await buildDictionary();
         }
         
-        if (request.voiceSearch) {
-            console.log("Voice Search Input - " + request.keyword);
-            // filter keyword search string against permissible dictionary words.            
-            query.voiceSearch = request.voiceSearch;
-            if (query.voiceSearch === "true"){
-                query.keyword = await utils.applyFilter(query.keyword);
-            }
-        } else {
-            console.log("Text Search Input - " + request.keyword);
-            query.keyword = await utils.applyFilter(query.keyword);
-        }
+        // filter keyword search string against permissible dictionary words.
+        console.log("Search Input - " + request.keyword);        
+        query.voiceSearch = request.voiceSearch;
+        query.keyword = await utils.applyFilter(query.keyword); 
+
+        console.log("Service : Filtered Text Keword : " + query.keyword);
         
+        if (query.keyword != null && query.keyword.length === 0) {
+            response.items = [];
+            response.brands = [];
+            response.sizes = [];
+            response.colors = [];
+            
+            return callback(null,response);
+        }
     }
     if (request.brands && request.brands.length > 0){
         query.brands = request.brands;
@@ -46,6 +49,8 @@ async function getCatalog(request, callback) {
     if (request.sortItem) {
         query.sortItem = request.sortItem;
     }
+    
+    console.log("Service : Search Query :: " + JSON.stringify(query));
     
     catalogDAO.getCatalog(query, async function(error, result) {
         if(error){

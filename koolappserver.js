@@ -63,7 +63,7 @@ var pool  = mysql.createPool({
 });
 var redisConnectionConfig = {
     port : 6379,
-    host : "192.168.134.132"
+    host : "192.168.134.136"
 }
 */
 
