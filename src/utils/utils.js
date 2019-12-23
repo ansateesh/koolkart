@@ -37,7 +37,7 @@ async function getFormattedKeyword(input, mandatoryKey) {
         var sanitizedInput = input.replace(/\s\s+/g, ' ');
         var formattedInput = sanitizedInput.split(" ");
         await asyncForEach(formattedInput, async function(word) {
-            output = output.concat("+").concat(word).concat(" ");
+            output = output.concat("+").concat(word).concat("* ");
             //output = output.replace(/'/g, "\\'");
         });
         resolve(output);
