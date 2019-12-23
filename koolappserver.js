@@ -67,6 +67,7 @@ var redisConnectionConfig = {
 }
 */
 
+
 //Redis config
 var redisConnectionConfig = {
     port : 6379,
@@ -81,6 +82,7 @@ var pool  = mysql.createPool({
   password        : 'welcome1',
   database        : 'sampledb'
 });
+
 
 var client = redis.createClient(redisConnectionConfig);
 

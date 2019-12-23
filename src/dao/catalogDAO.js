@@ -126,7 +126,7 @@ async function getFilters(query, callback) {
                         '(select group_concat(distinct SKU_ATTRIBUTE_VALUE1) as sizes from XXIBM_PRODUCT_SKU where match(DESCRIPTION, LONG_DESCRIPTION, SKU_ATTRIBUTE_VALUE1, SKU_ATTRIBUTE_VALUE2) '.concat('against(').concat(formattedKeyword).concat(')) as sizes,') + 
                         '(select group_concat(distinct SKU_ATTRIBUTE_VALUE2) as colors from XXIBM_PRODUCT_SKU where match(DESCRIPTION, LONG_DESCRIPTION, SKU_ATTRIBUTE_VALUE1, SKU_ATTRIBUTE_VALUE2) '.concat('against(').concat(formattedKeyword).concat(')) as colors,') + 
                         '(select group_concat(distinct b.BRAND) as brands from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_STYLE b where b.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000 and match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) '.concat('against(').concat(formattedKeyword).concat(')) as brands');
-                        /*
+        /*
         queryValues.push(formattedKeyword);
         queryValues.push(formattedKeyword);
         queryValues.push(formattedKeyword);

@@ -2,6 +2,7 @@ var WordPOS = require('wordpos'),
 wordpos = new WordPOS();
 var STOP_WORDS = ["in", "and"];
 var NEW_WORDS = ["women's", "men's", "women", "men", "womens", "mens"]
+var pluralize = require('pluralize');
     
 function flatten(input, delim){
     var result = "";
@@ -37,9 +38,13 @@ async function getFormattedKeyword(input, mandatoryKey) {
         var sanitizedInput = input.replace(/\s\s+/g, ' ');
         var formattedInput = sanitizedInput.split(" ");
         await asyncForEach(formattedInput, async function(word) {
+            word = getFormattedKey(word);
+            word = getSingular(word);
+            word = removeSpecialChars(word);
             output = output.concat("+").concat(word).concat("* ");
             //output = output.replace(/'/g, "\\'");
         });
+        console.log("Util : formatted key word : " + output);
         resolve(output);
     });
 }
@@ -51,12 +56,14 @@ function buildDictionary(text) {
         
         await asyncForEach(formattedInput, function(n){
             if(STOP_WORDS.includes(n) === false) {
+                n = sanitizeKey(n);
                 DICTIONARY.set(n.toLowerCase(), n.toLowerCase());
             }
         });
 
         await asyncForEach(NEW_WORDS, function(e){
             if(STOP_WORDS.includes(e) === false) {
+                e = sanitizeKey(e);
                 DICTIONARY.set(e.toLowerCase(), e.toLowerCase());
             }
         });         
@@ -71,10 +78,12 @@ async function applyFilter(input) {
         var sanitizedInput = "";
         var dataArray = [];
         var outputArray = [];
+        var pos = -1;
         if (input && input.length > 0) {
             sanitizedInput = input.replace(/\s\s+/g, ' ');
             dataArray = sanitizedInput.split(" ");
             dataArray.forEach(function(rec){
+                rec = sanitizeKey(rec);
                 if(DICTIONARY.has(rec.toLowerCase()) === true) {
                     outputArray.push(rec);
                 }
@@ -97,6 +106,37 @@ async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
+}
+
+function sanitizeKey(key) {
+    var result = key;
+    result = getFormattedKey(result);
+    result = removeSpecialChars(result);
+    result = getSingular(result);
+    
+    return result;
+}
+
+function getFormattedKey(key) {
+    var result = key;
+    var pos = key.indexOf("-");
+    if (pos > -1 && key.length > pos) {
+        result = key.substring(pos + 1);
+    }
+    
+    return result;
+}
+
+function getSingular(word) {
+    var singularWord = word;
+    if (pluralize.isPlural(word) ) {
+        singularWord = word.replace(/s$/i,"");
+    }
+    return singularWord;
+}
+
+function removeSpecialChars(word) {
+    return(word.replace(/'s$/, ""));
 }
 
 module.exports = {flatten, getFormattedNouns, getNouns, getFormattedKeyword, asyncForEach, buildDictionary, applyFilter, printDictionary};
