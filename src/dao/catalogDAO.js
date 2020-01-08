@@ -2,11 +2,45 @@ const path = require('path');
 const utils = require('../utils/utils.js');
 const shape = require("shape-json");
 
-async function getCatalog(query, callback) {
+function getCatalog(query) {
+    return new Promise(function (resolve, reject) {
+        console.log("DAO : getCatalog : input : " + JSON.stringify(query));
+        getCatalog_internal(query, async function(error, results) {
+            if (error) {
+                console.log("DAO : getCatalog : error retrieving catalog");
+                reject(error);
+            } else {
+                var filters = await getFilters(query);
+                if (filters && results) {
+                    results.brands = filters.brands;
+                    results.colors = filters.colors;
+                    results.sizes = filters.sizes;
+                }
+                resolve(results);
+            }
+        });
+    });
+}
+
+function getFilters(query) {
+    return new Promise(function(resolve, reject){
+        console.log("DAO : getFilters : input : " + JSON.stringify(query));
+        getFilters_internal(query, function(error, results){
+            if(error) {
+                console.log("DAO : getFilters : error retrieving filters");
+                reject(error);
+            }else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+async function getCatalog_internal(query, callback) {
     var formattedKeyword = "";
     
-    console.log("DAO : Catalog Query");
-    console.log(query);
+    //console.log("DAO : Catalog Query");
+    //console.log(query);
     
     // form search query
     var baseQuery = 'select a.ITEM_NUMBER, a.DESCRIPTION, a.LONG_DESCRIPTION, a.CATALOGUE_CATEGORY, a.SKU_UNIT_OF_MEASURE, a.SKU_ATTRIBUTE1, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE2, a.SKU_ATTRIBUTE_VALUE2, a.SKU_ATTRIBUTE3, a.SKU_ATTRIBUTE_VALUE3, b.LIST_PRICE, b.DISCOUNT, b.IN_STOCK, c.BRAND AS BRAND from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_PRICING b, XXIBM_PRODUCT_STYLE c where a.ITEM_NUMBER=b.ITEM_NUMBER and c.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000';
@@ -14,7 +48,7 @@ async function getCatalog(query, callback) {
     
     if (query.keyword) {
         formattedKeyword = await utils.getFormattedKeyword(query.keyword, true);
-        console.log("DAO : formatted keyword - " + formattedKeyword);
+        //console.log("DAO : formatted keyword - " + formattedKeyword);
         searchQuery = searchQuery.concat(" AND match(a.DESCRIPTION, a.LONG_DESCRIPTION, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE_VALUE2) against(\"").concat(formattedKeyword).concat("\" IN BOOLEAN MODE)");
     }
     if(query.categoryId) {
@@ -46,7 +80,7 @@ async function getCatalog(query, callback) {
             // handle error
             return callback(err, null);
         }else {
-            console.log("DAO : Catalog Search Query final");
+            console.log("DAO : Catalog Search Query");
             console.log(searchQuery);
             
             if(query.keyword) {
@@ -64,7 +98,6 @@ async function getCatalog(query, callback) {
                 console.log("Got error executing query");
                 console.log(error);
             }
-            //console.log("Query results...");
             
             if(results) {
                 Object.keys(results).forEach(function(key) {
@@ -111,13 +144,13 @@ async function getCatalog(query, callback) {
     });
 }
 
-async function getFilters(query, callback) {
+async function getFilters_internal(query, callback) {
     var filterQuery = "";
     var formattedKeyword = "";
     var queryValues = [];
     
     if (query.keyword) {
-        console.log("Filter Keyword : " + query.keyword);
+        console.log("DAO : getFilters : Filter Keyword : " + query.keyword);
         var formattedKeyword = await utils.getFormattedKeyword(query.keyword);
         formattedKeyword = "'".concat(formattedKeyword).concat("'");
         formattedKeyword = formattedKeyword.concat(" in boolean mode");
@@ -156,7 +189,7 @@ async function getFilters(query, callback) {
         queryValues.push(query.commodity);
         queryValues.push(query.commodity);                            
     } else {
-        console.log("SHOULD NOT HAVE ENTERED HERE....")
+        console.log("FILTERS : WHY DID I COME HERE?")
         filterQuery = 'select ' + '(select group_concat(distinct SKU_ATTRIBUTE_VALUE1) from XXIBM_PRODUCT_SKU where SKU_ATTRIBUTE_VALUE1 IS NOT NULL ) as sizes,' +
                                   '(select group_concat(distinct SKU_ATTRIBUTE_VALUE2) from XXIBM_PRODUCT_SKU where SKU_ATTRIBUTE_VALUE2 IS NOT NULL) as colors,' +
                                   '(select group_concat(distinct BRAND) from XXIBM_PRODUCT_STYLE where BRAND IS NOT NULL ) as brands';
@@ -180,16 +213,13 @@ async function getFilters(query, callback) {
                 console.log("Got error executing query");
                 console.log(error);
             }
-            console.log("Query results...");
-            //console.log(results);
-            
+
             if (results && results.length > 0) {
                 if (results[0].sizes) {
                     response.sizes = results[0].sizes.split(",");
                 }
                 
                 if (results[0].colors) {
-                    console.log("Filters : colors : " + results[0].colors);
                     response.colors = results[0].colors.split(",");
                 }
                 if (results[0].brands) {
@@ -234,7 +264,6 @@ async function getSupportedKeywords(callback) {
                                 var row_all = "".concat(item.long_description).concat(" ").concat(item.description)
                                     .concat(" ").concat(item.brand).concat(" ").concat(item.size)
                                     .concat(" ").concat(item.color);
-                                //console.log("DAO : ROW_ALL :: " + row_all);  
                                 await utils.buildDictionary(row_all);
                                 
                                 if (item.brand){

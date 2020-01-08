@@ -1,9 +1,12 @@
 const CACHE = {
     KEYS : {
-        PRODUCT_HIERARCHY : {key : "catalog_hierarchy"} 
+        PRODUCT_HIERARCHY : {key : "catalog_hierarchy"}, 
+        PRODUCT_PREFIX : "getProducts"
     }
 }
 
-const CACHE_EXPIRY_IN_SEC = 86400; // 24 hours
+const SUPPORTED_LANGUAGES = ['hi', 'kn', 'bn', 'ml', 'mr', 'ta', 'te'];
 
-module.exports = {CACHE, CACHE_EXPIRY_IN_SEC};
+const CACHE_TTL_SEC = 3600; // 1 hour
+
+module.exports = {CACHE, CACHE_TTL_SEC, SUPPORTED_LANGUAGES};

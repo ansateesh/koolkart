@@ -1,17 +1,35 @@
 const constants = require('../constants/constants.js');
 
-function set(key, value, callback) {
-    redisClient.set(key, value, function(error, result) {
-        console.log("Cache : Storing for key - " + key);
-        redisClient.expire(key, constants.CACHE_EXPIRY_IN_SEC);
-        return callback(error, result);
+function set(key, value) {
+    return new Promise(function(resolve, reject){
+        if (!REDIS_CLIENT) {
+            reject(null);
+        } else {
+            REDIS_CLIENT.set(key, value, function(error, result) {
+                if (error) {
+                    reject(error)
+                } else {
+                    REDIS_CLIENT.expire(key, constants.CACHE_TTL_SEC);
+                    resolve(result);
+                }
+            });
+        }
     });
 }
 
-function get(key, callback) {
-    redisClient.get(key, function(err, result){
-        console.log("Cache : Got result for key - " + key );
-        return callback(err, result);
+function get(key) {
+    return new Promise(function(resolve, reject){
+        if (REDIS_CLIENT) {
+            REDIS_CLIENT.get(key, function(err, result){
+                if(err) {
+                    reject(err);
+                } else{
+                    resolve(result);
+                }
+            });
+        } else {
+            reject(null);
+        }
     });
 }
 

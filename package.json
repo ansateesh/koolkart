@@ -32,6 +32,7 @@
     "file-base64": "^1.0.0",
     "find-remove": "^1.2.0",
     "fs": "0.0.1-security",
+    "google-translate": "^3.0.0",
     "gridfs": "^1.0.0",
     "gridfs-stream": "^1.1.1",
     "http": "0.0.0",

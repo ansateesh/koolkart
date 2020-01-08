@@ -3,9 +3,9 @@ const express = require('express');
 const router = express.Router();
 const catalogService = require('../services/catalogService.js');
 
-router.get('/products', function (req, res) {
+router.get('/products', async function (req, res) {
     
-    console.log("Route : get products");
+    console.log("Route : get products : START");
     
     //form search request
     var searchRequest = {};
@@ -52,11 +52,17 @@ router.get('/products', function (req, res) {
     if (req.query.vs) {
         searchRequest.voiceSearch=req.query.vs
     }
+    if (req.query.langCode) {
+        searchRequest.langCode = req.query.langCode;
+    }
     
-    // search catalog
-    catalogService.getCatalog(searchRequest, function(error, results){
-        if(error) {
-            console.log(error);
+    catalogService.getCatalog(searchRequest)
+        .then(data => { 
+            console.log("Route : get products : END"); 
+            res.send(data);
+        })
+        .catch(e => {
+            console.log(e);
             let resObj = {};
             let responseBody = [];
 
@@ -65,12 +71,8 @@ router.get('/products', function (req, res) {
             responseBody.push(resObj);
             res.status(500)
             console.log("get catalog : Sending error response...")
-            res.send(responseBody).end();            
-        } else {
-            console.log("get catalog : Sending response...")
-            res.send(results);            
-        }
-    });
+            res.send(responseBody).end();           
+        });
 });
 
 router.get('/categories', function (req, res) {
@@ -79,7 +81,7 @@ router.get('/categories', function (req, res) {
     
     catalogService.getCatalogHierarchy()
         .then(data => {
-            console.log("get categoreis : Sending response...")
+            console.log("Route : getCategories : END");
             res.send(data);
         })
         .catch(e => {
@@ -101,7 +103,7 @@ router.get('/catalog/family/:id', function (req, res) {
     request.family = req.params.id;
     
     catalogService.getProducts(request)
-        .then(data => res.send(data))
+        .then(data => {console.log("Route : getProducts for family : END"); res.send(data); })
         .catch(e => {
             console.log(e);
             let resObj = {};
@@ -121,7 +123,7 @@ router.get('/catalog/class/:id', function (req, res) {
     request.class = req.params.id; 
     
     catalogService.getProducts(request)
-        .then(data => res.send(data))
+        .then(data => {console.log("Route : products for class : END"); res.send(data);})
         .catch(e => {
             console.log(e);
             let resObj = {};
@@ -141,7 +143,7 @@ router.get('/catalog/commodity/:id', function (req, res) {
     request.commodity = req.params.id; 
     
     catalogService.getProducts(request)
-        .then(data => res.send(data))
+        .then(data => {console.log("Route : getProducts for commodity : END"); res.send(data); })
         .catch(e => {
             console.log(e);
             let resObj = {};

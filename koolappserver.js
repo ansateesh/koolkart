@@ -52,8 +52,9 @@ app.use(expressValidator({
     }
 }));
 
-/*
+
 // MySQL connections
+/*
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'localhost',
@@ -63,15 +64,14 @@ var pool  = mysql.createPool({
 });
 var redisConnectionConfig = {
     port : 6379,
-    host : "192.168.134.136"
+    host : "192.168.134.138"
 }
 */
-
 
 //Redis config
 var redisConnectionConfig = {
     port : 6379,
-    host : "172.30.144.120",
+    host : "redis.ahold-delhaize-team.svc.cluster.local"
     password : "mjUCewcQyDc8LDcX"
 }
 
@@ -83,10 +83,11 @@ var pool  = mysql.createPool({
   database        : 'sampledb'
 });
 
-
 var client = redis.createClient(redisConnectionConfig);
+global.REDIS_CLIENT = null;
 
 client.on('connect', function() {
+    global.REDIS_CLIENT = client;
     console.log('Redis client connected');
     // clear older keys
     var catalog_hierarchy_key = JSON.stringify(constants.CACHE.KEYS.PRODUCT_HIERARCHY);
@@ -105,7 +106,6 @@ client.on('error', function (err) {
 });
 
 global.connectionPool = pool;
-global.redisClient = client;
 global.DICTIONARY = KEYWORDS;
 global.ALLWORDS = ALLWORDS;
 

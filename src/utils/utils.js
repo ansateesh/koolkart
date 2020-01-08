@@ -1,7 +1,12 @@
+var apiKey = 'AIzaSyBH9cpi0WJJSjHfyq2zr_PDSs0gKdXi8jU';
+var options = {
+  concurrentLimit: 20
+};
+var googleTranslate = require('google-translate')(apiKey, null);
 var WordPOS = require('wordpos'),
 wordpos = new WordPOS();
 var STOP_WORDS = ["in", "and"];
-var NEW_WORDS = ["women's", "men's", "women", "men", "womens", "mens"]
+var NEW_WORDS = [];
 var pluralize = require('pluralize');
     
 function flatten(input, delim){
@@ -139,4 +144,41 @@ function removeSpecialChars(word) {
     return(word.replace(/'s$/, ""));
 }
 
-module.exports = {flatten, getFormattedNouns, getNouns, getFormattedKeyword, asyncForEach, buildDictionary, applyFilter, printDictionary};
+function translateAll(sentence, langCode) {
+    
+    return new Promise(async function(resolve, reject){
+        var words = sentence.split(" ");
+        var translatedWords = [];
+        var transatedWord = "";
+        var result;
+        
+        await asyncForEach(words, async function(word) {
+            translatedWord = await translate(word);
+            if(translatedWord !== null || translatedWord.length > 0) {
+                translatedWords.push(translatedWord);
+            }
+        });
+        
+        result = translatedWords.map(function(rec){return rec}).join(" ");
+        
+        resolve(result);
+    });
+}
+
+function translate(text, langCode) {
+    return new Promise(function(resolve, reject){
+        var translatedText = "";
+        googleTranslate.translate(text, langCode, "en", function(err, translation){
+            if(!err){
+                translatedText = translation.translatedText;
+                resolve(translatedText);
+            } else {
+                resolve(translatedText);
+            }
+        });
+    });
+    
+    return translatedText;
+}
+
+module.exports = {flatten, getFormattedNouns, getNouns, getFormattedKeyword, asyncForEach, buildDictionary, applyFilter, printDictionary, translate, translateAll};
