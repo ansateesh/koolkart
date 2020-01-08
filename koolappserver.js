@@ -71,7 +71,7 @@ var redisConnectionConfig = {
 //Redis config
 var redisConnectionConfig = {
     port : 6379,
-    host : "redis.ahold-delhaize-team.svc.cluster.local"
+    host : "redis.ahold-delhaize-team.svc.cluster.local",
     password : "mjUCewcQyDc8LDcX"
 }
 
