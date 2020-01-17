@@ -302,14 +302,17 @@ function getCatalogHierarchy() {
             "$group[families](family)": {
                 "id": "family",
                 "name": "family_name",
+                "short_name": "family_name_short",
                 "url": "family_url",
                 "$group[classes](class)": {
                     "id": "class",
                     "name": "class_name",
+                    "short_name" : "class_name_short",
                     "url": "class_url",
                     "$group[commodities](commodity)": {
                         "id": "commodity",
                         "name": "commodity_name",
+                        "short_name": "commodity_name_short",
                         "url": "commodity_url"
                     }
                 }
@@ -340,10 +343,13 @@ function getCatalogHierarchy() {
                                     record.segment_name = row.SEGMENT_NAME;
                                     record.family = row.FAMILY;
                                     record.family_name = row.FAMILY_NAME;
+                                    record.family_name_short = utils.getFormattedText(record.family_name, " ", 1);
                                     record.class = row.CLASS;
                                     record.class_name = row.CLASS_NAME;
+                                    record.class_name_short = utils.getFormattedText(record.class_name, " ", 1);
                                     record.commodity = row.COMMODITY;
                                     record.commodity_name = row.COMMODITY_NAME;
+                                    record.commodity_name_short = utils.getFormattedText(record.commodity_name, " ", 4);
                                     record.segment_url = baseUrl.concat("/segment/").concat(row.SEGMENT);
                                     record.family_url = baseUrl.concat("/family/").concat(row.FAMILY);
                                     record.class_url = baseUrl.concat("/class/").concat(row.CLASS);

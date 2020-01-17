@@ -181,4 +181,18 @@ function translate(text, langCode) {
     return translatedText;
 }
 
-module.exports = {flatten, getFormattedNouns, getNouns, getFormattedKeyword, asyncForEach, buildDictionary, applyFilter, printDictionary, translate, translateAll};
+function getFormattedText(text, separator, len) {
+    var output = "";
+    var input = text;
+    var tokens = text.split(separator);
+    if ( tokens.length >= len ) {
+        for(i=0; i<len; i++) {
+            output = output + separator + tokens[i]
+        }
+    } else {
+        output = input;
+    }
+    return output.trim();
+}
+
+module.exports = {flatten, getFormattedNouns, getNouns, getFormattedKeyword, asyncForEach, buildDictionary, applyFilter, printDictionary, translate, translateAll, getFormattedText};

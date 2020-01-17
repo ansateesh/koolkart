@@ -52,9 +52,8 @@ app.use(expressValidator({
     }
 }));
 
-
-// MySQL connections
 /*
+// MySQL connections
 var pool  = mysql.createPool({
   connectionLimit : 5,
   host            : 'localhost',
