@@ -2,6 +2,8 @@ const path = require('path');
 const utils = require('../utils/utils.js');
 const shape = require("shape-json");
 
+const MAX_CATEGORIES_PER_FAMILY = 60;
+
 function getCatalog(query) {
     return new Promise(function (resolve, reject) {
         console.log("DAO : getCatalog : input : " + JSON.stringify(query));
@@ -38,9 +40,6 @@ function getFilters(query) {
 
 async function getCatalog_internal(query, callback) {
     var formattedKeyword = "";
-    
-    //console.log("DAO : Catalog Query");
-    //console.log(query);
     
     // form search query
     var baseQuery = 'select a.ITEM_NUMBER, a.DESCRIPTION, a.LONG_DESCRIPTION, a.CATALOGUE_CATEGORY, a.SKU_UNIT_OF_MEASURE, a.SKU_ATTRIBUTE1, a.SKU_ATTRIBUTE_VALUE1, a.SKU_ATTRIBUTE2, a.SKU_ATTRIBUTE_VALUE2, a.SKU_ATTRIBUTE3, a.SKU_ATTRIBUTE_VALUE3, b.LIST_PRICE, b.DISCOUNT, b.IN_STOCK, c.BRAND AS BRAND from XXIBM_PRODUCT_SKU a, XXIBM_PRODUCT_PRICING b, XXIBM_PRODUCT_STYLE c where a.ITEM_NUMBER=b.ITEM_NUMBER and c.ITEM_NUMBER=FLOOR(a.ITEM_NUMBER/1000) * 1000';
@@ -291,7 +290,9 @@ async function getSupportedKeywords(callback) {
 function getCatalogHierarchy() {
     console.log("DAO : get product hierarchy...")
     var baseUrl = "/api/v1/catalog";
+    var family2categoryMap = new Map();
     var results = [];
+    var mandatoryCategories = [];
     var query = "select SEGMENT, SEGMENT_NAME, FAMILY, FAMILY_NAME, CLASS, CLASS_NAME, COMMODITY, COMMODITY_NAME from XXIBM_PRODUCT_CATALOGUE";
     var hierarchy = {};
     var hierarchy_schema = {
@@ -321,11 +322,14 @@ function getCatalogHierarchy() {
     };
     
     return new Promise (function(resolve, reject) {
-        connectionPool.getConnection(function(err, connection) {
+        connectionPool.getConnection(async function(err, connection) {
             if(err) {
                 console.log(err);
                 reject(err);
             } else {
+                // get supported categories
+                var mandatoryCategories = await getSupportedCategories();
+                
                 connection.query(query, async function(error, output, fields) {
                     if(error) {
                         console.log(error);
@@ -357,7 +361,34 @@ function getCatalogHierarchy() {
                                     results.push(record);
                                 }
                             });
-                            hierarchy = shape.parse(results, hierarchy_schema); 
+                            
+                            var final_results = [];
+                            var family2categoryMap = new Map();
+                            
+                            await utils.asyncForEach(results, function(rec){
+                                if (!family2categoryMap.has(rec.family)) {
+                                    family2categoryMap.set(rec.family, []);
+                                }
+                                family2categoryMap.get(rec.family).push(rec);
+                            });
+                            
+                            var families = family2categoryMap.keys();
+                            for(let family of families) {
+                                var mandatoryCats = mandatoryCategories.get(family);
+                                var recArr = family2categoryMap.get(family);
+                                var reducedCategories = [];
+                                var count = (recArr.length < MAX_CATEGORIES_PER_FAMILY) ? recArr.length : MAX_CATEGORIES_PER_FAMILY; 
+                                
+                                reducedCategories = recArr.slice(0, count);
+                                mandatoryCats.forEach(function(mc){
+                                    if (reducedCategories.filter(rec => rec.commodity === mc.commodity).length === 0) {
+                                        reducedCategories.push(mc);
+                                    }
+                                });
+                                final_results = final_results.concat(reducedCategories);
+                            };
+                            
+                            hierarchy = shape.parse(final_results, hierarchy_schema); 
                             resolve(hierarchy);
                         } else {
                             resolve(hierarchy);
@@ -368,6 +399,64 @@ function getCatalogHierarchy() {
         });
     });
 }
+
+function getSupportedCategories() {
+    var baseUrl = "/api/v1/catalog";
+    var results = [];
+    var getSupportedCategories = "select SEGMENT, SEGMENT_NAME, FAMILY, FAMILY_NAME, CLASS, CLASS_NAME, COMMODITY, COMMODITY_NAME from XXIBM_PRODUCT_CATALOGUE where COMMODITY IN (select distinct CATALOGUE_CATEGORY from XXIBM_PRODUCT_SKU order by CATALOGUE_CATEGORY)";
+    
+    return new Promise (function(resolve, reject) {
+        connectionPool.getConnection(function(err, connection) {
+            if(err) {
+                reject(err);
+            } else {
+                connection.query(getSupportedCategories, [], async function(error, output, fields) {
+                    if(error) {
+                        connection.release();
+                        reject(error);
+                    } else {
+                        connection.release();
+                        if(output) {
+                            var resultKeys = Object.keys(output);
+                            await utils.asyncForEach(resultKeys, function (key){ 
+                                var record = {};                            
+                                var row = output[key];
+                                if (row) {
+                                    record.segment = row.SEGMENT;
+                                    record.segment_name = row.SEGMENT_NAME;
+                                    record.family = row.FAMILY;
+                                    record.family_name = row.FAMILY_NAME;
+                                    record.family_name_short = utils.getFormattedText(record.family_name, " ", 1);
+                                    record.class = row.CLASS;
+                                    record.class_name = row.CLASS_NAME;
+                                    record.class_name_short = utils.getFormattedText(record.class_name, " ", 1);
+                                    record.commodity = row.COMMODITY;
+                                    record.commodity_name = row.COMMODITY_NAME;
+                                    record.commodity_name_short = utils.getFormattedText(record.commodity_name, " ", 4);
+                                    record.segment_url = baseUrl.concat("/segment/").concat(row.SEGMENT);
+                                    record.family_url = baseUrl.concat("/family/").concat(row.FAMILY);
+                                    record.class_url = baseUrl.concat("/class/").concat(row.CLASS);
+                                    record.commodity_url = baseUrl.concat("/commodity/").concat(row.COMMODITY);
+                                    results.push(record);
+                                }
+                            });
+                            
+                            var family2categoryMap = new Map();
+                            await utils.asyncForEach(results, function(rec){
+                                if (!family2categoryMap.has(rec.family)) {
+                                    family2categoryMap.set(rec.family, []);
+                                }
+                                family2categoryMap.get(rec.family).push(rec);
+                            });
+                            resolve(family2categoryMap);
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
+
 
 function getProducts(query) {
     var family = query.family;
