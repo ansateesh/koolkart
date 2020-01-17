@@ -380,11 +380,13 @@ function getCatalogHierarchy() {
                                 var count = (recArr.length < MAX_CATEGORIES_PER_FAMILY) ? recArr.length : MAX_CATEGORIES_PER_FAMILY; 
                                 
                                 reducedCategories = recArr.slice(0, count);
-                                mandatoryCats.forEach(function(mc){
-                                    if (reducedCategories.filter(rec => rec.commodity === mc.commodity).length === 0) {
-                                        reducedCategories.push(mc);
-                                    }
-                                });
+                                if (mandatoryCats) {
+                                    mandatoryCats.forEach(function(mc){
+                                        if (reducedCategories.filter(rec => rec.commodity === mc.commodity).length === 0) {
+                                            reducedCategories.push(mc);
+                                        }
+                                    });
+                                }
                                 final_results = final_results.concat(reducedCategories);
                             };
                             
