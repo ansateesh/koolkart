@@ -373,23 +373,33 @@ function getCatalogHierarchy() {
                             });
                             
                             var families = family2categoryMap.keys();
-                            for(let family of families) {
+                            for (let family of families) {
                                 var mandatoryCats = mandatoryCategories.get(family);
+                                var manCatsArray = [];
                                 var recArr = family2categoryMap.get(family);
                                 var reducedCategories = [];
-                                var count = (recArr.length < MAX_CATEGORIES_PER_FAMILY) ? recArr.length : MAX_CATEGORIES_PER_FAMILY; 
                                 
-                                reducedCategories = recArr.slice(0, count);
                                 if (mandatoryCats) {
-                                    mandatoryCats.forEach(function(mc){
-                                        if (reducedCategories.filter(rec => rec.commodity === mc.commodity).length === 0) {
-                                            reducedCategories.push(mc);
-                                        }
-                                    });
+                                    manCatsArray = mandatoryCats.map(function(o){return o.commodity;});
+                                    var count = (mandatoryCats.length < MAX_CATEGORIES_PER_FAMILY) ? mandatoryCats.length : MAX_CATEGORIES_PER_FAMILY; 
+                                    reducedCategories = mandatoryCats.slice(0,count);
+                                    console.log("Man cats len - " + mandatoryCats.length);
+                                    console.log("Reduced cats len - " + reducedCategories.length);
+                                }
+                                var cnt = (reducedCategories.length <= MAX_CATEGORIES_PER_FAMILY) ? (MAX_CATEGORIES_PER_FAMILY - reducedCategories.length) : 0;
+                                console.log("Add more len - " + cnt);
+                                if(cnt > 0){
+                                    var tmp;
+                                    if(mandatoryCats) {
+                                        tmp = recArr.filter(o=>!mandatoryCats.includes(o.commodity));
+                                    }else {
+                                        tmp = recArr;
+                                    }
+                                    reducedCategories = reducedCategories.concat(tmp.slice(0,cnt));
                                 }
                                 final_results = final_results.concat(reducedCategories);
+                                console.log("Final Cat Len - " + final_results.length);
                             };
-                            
                             hierarchy = shape.parse(final_results, hierarchy_schema); 
                             resolve(hierarchy);
                         } else {
